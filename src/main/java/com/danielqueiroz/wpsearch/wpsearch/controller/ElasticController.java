@@ -13,6 +13,7 @@ public class ElasticController {
     public String elastic() {
         ClientConfiguration clientConfiguration = ClientConfiguration.builder().connectedTo("localhost:9200").build();
         RestHighLevelClient client = RestClients.create(clientConfiguration).rest();
+        System.out.println(client);
         return "Elastic";
     }
 

@@ -1,9 +1,15 @@
 package com.danielqueiroz.wpsearch.wpsearch.controller;
 
+import static com.danielqueiroz.wpsearch.wpsearch.service.ElasticClientService.getClient;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import com.alibaba.fastjson.JSON;
 
 import org.elasticsearch.action.DocWriteResponse.Result;
 import org.elasticsearch.action.index.IndexRequest;
@@ -12,10 +18,12 @@ import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.common.xcontent.XContentType;
+import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.search.SearchHit;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.RestClients;
 
@@ -23,23 +31,26 @@ import model.Person;
 
 public class ElasticControllerTest {
 
-    private static RestHighLevelClient client;
-
     @BeforeAll
     public static void setUp() {
-        ClientConfiguration clientConfiguration = ClientConfiguration.builder().connectedTo("localhost:9200").build();
-        client = RestClients.create(clientConfiguration).rest();
     }
 
     @Test
-    public void givenJsonString_whenJavaObject_thenIndexDocument() {
+    public void givenJsonString_whenJavaObject_thenIndexDocument() throws IOException {
 
-        // Persist a document
-        String jsonObject = "{\"age\":10,\"dateOfBirth\":1471466076564," + "\"fullName\":\"John Doe\"}";
+        // Create Json object
+        XContentBuilder builder = XContentFactory.jsonBuilder();
+        builder.startObject();
+        builder.field("name", "Daniel");
+        builder.field("age", "30");
+        builder.field("email", "teste@gmail.com");
+        builder.endObject();
+
+        // Salva json
         IndexRequest request = new IndexRequest("people");
-        request.source(jsonObject, XContentType.JSON);
+        request.source(builder);
 
-        IndexResponse response = client.index(request, RequestOptions.DEFAULT);
+        IndexResponse response = getClient().index(request, RequestOptions.DEFAULT);
         String index = response.getIndex();
         long version = response.getVersion();
 
@@ -49,9 +60,11 @@ public class ElasticControllerTest {
 
         // Search
         SearchRequest searchRequest = new SearchRequest();
-        SearchResponse sResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+        SearchResponse sResponse = getClient().search(searchRequest, RequestOptions.DEFAULT);
         SearchHit[] searchHits = sResponse.getHits().getHits();
-        List<Person> results = Arrays.stream(searchHits)
+        List<Person> resultsList = Arrays.stream(searchHits)
                 .map(hit -> JSON.parseObject(hit.getSourceAsString(), Person.class)).collect(Collectors.toList());
+
+        assertTrue(resultsList.size() > 0);
     }
 }
