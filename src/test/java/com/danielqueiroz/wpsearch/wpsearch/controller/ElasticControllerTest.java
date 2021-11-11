@@ -2,6 +2,7 @@ package com.danielqueiroz.wpsearch.wpsearch.controller;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.Arrays;
 import java.util.List;
 
 import org.elasticsearch.action.DocWriteResponse.Result;
@@ -17,6 +18,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.RestClients;
+
+import model.Person;
 
 public class ElasticControllerTest {
 
@@ -46,8 +49,8 @@ public class ElasticControllerTest {
 
         // Search
         SearchRequest searchRequest = new SearchRequest();
-        SearchResponse response = client.search(searchRequest, RequestOptions.DEFAULT);
-        SearchHit[] searchHits = response.getHits().getHits();
+        SearchResponse sResponse = client.search(searchRequest, RequestOptions.DEFAULT);
+        SearchHit[] searchHits = sResponse.getHits().getHits();
         List<Person> results = Arrays.stream(searchHits)
                 .map(hit -> JSON.parseObject(hit.getSourceAsString(), Person.class)).collect(Collectors.toList());
     }
