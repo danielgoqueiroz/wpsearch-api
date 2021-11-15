@@ -1,4 +1,4 @@
-package model;
+package com.danielqueiroz.wpsearch.wpsearch.model;
 
 import java.util.List;
 

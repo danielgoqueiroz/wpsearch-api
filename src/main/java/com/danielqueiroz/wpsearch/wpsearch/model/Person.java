@@ -1,4 +1,4 @@
-package model;
+package com.danielqueiroz.wpsearch.wpsearch.model;
 
 public class Person {
 
