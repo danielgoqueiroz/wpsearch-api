@@ -21,9 +21,6 @@ public class PostDTO {
     private Map<String, String> content;
     private Map<String, String> excerpt;
     private Map<String, Object> _embedded;
-//    public String modified;
-//    public String type;
-//    public int featured_media;
 
 	public Integer getId() {
 		return id;

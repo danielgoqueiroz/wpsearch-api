@@ -13,17 +13,21 @@ import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.danielqueiroz.wpsearch.wpsearch.dto.PostDTO;
 import com.danielqueiroz.wpsearch.wpsearch.model.Person;
 import com.danielqueiroz.wpsearch.wpsearch.model.Post;
 
+import org.apache.commons.io.FileUtils;
 import org.elasticsearch.action.DocWriteResponse.Result;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.common.xcontent.XContent;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.junit.jupiter.api.Test;
@@ -35,13 +39,17 @@ public class ElasticControllerTest {
         File baseFolder = new File("D:/Desenvolvimento/MachineLearning/Dados Ndmais/2021");
         Files.walk(baseFolder.toPath()).filter(Files::isRegularFile).forEach(filePath -> {
             try {
-                JSONObject json = JSON.parseObject(new String(Files.readAllBytes(filePath)), JSONObject.class);
-                // String json = new String(Files.readAllBytes(filePath));
+            	
+                JSON json = (JSON) JSON.parse(FileUtils.readFileToString(filePath.toFile()));
+				PostDTO postDTO = JSON.toJavaObject(json, PostDTO.class);
                 IndexRequest request = new IndexRequest("publicacao");
-                request.source(json);
+                Post post = postDTO.getPost();
+				String jsonString = JSON.toJSONString(post);
+				request.source(jsonString, XContentType.JSON);
                 IndexResponse response = getClient().index(request, RequestOptions.DEFAULT);
                 assertEquals(Result.CREATED, response.getResult());
             } catch (IOException e) {
+            	System.out.println("Erro ao processar arquivo " + filePath);
                 e.printStackTrace();
             }
         });
