@@ -1,310 +1,160 @@
 package com.danielqueiroz.wpsearch.wpsearch.dto;
 
-import java.util.Date;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-import com.alibaba.fastjson.JSON;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.danielqueiroz.wpsearch.wpsearch.model.Post;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class PostDTO {
 
-    public int id;
-    public String date;
-    public String modified;
-    public String type;
-    public String link;	
-    public Title title;
-    public Content content;
-    public Excerpt excerpt;
-    public int featured_media;
-    public Embedded _embedded;
+    private Integer id;
+    private String date;
+    private String link;	
+    private Map<String, String> title;
+    private Map<String, String> content;
+    private Map<String, String> excerpt;
+    private Map<String, Object> _embedded;
+//    public String modified;
+//    public String type;
+//    public int featured_media;
 
-//    public PostDTO(String json) {
-//    	PostDTO post = JSON.parseObject(json, PostDTO.class);
-//        this.id = post.id;
-//        this.date = post.date;
-//        this.modified = post.modified;
-//        this.type = post.type;
-//        this.link = post.link;
-//        this.title = post.title;
-//        this.content = post.content;
-//        this.excerpt = post.excerpt;
-//        this.featured_media = post.featured_media;
-//        this._embedded = post._embedded;
-//
-//    };
+	public Integer getId() {
+		return id;
+	}
 
-    public Post getPost() {
-        Post post = new Post();
-        post.setId(this.id);
-        post.setDate(String.valueOf(this.date));
-        post.setTitle(title.rendered);
-        post.setContent(content.rendered);
-        post.setExcerpt(excerpt.rendered);
-        post.setAuthor(_embedded.author.stream().findFirst().get().name);
-        post.setLink(link);
-        // item.taxonomy.equals("taxonomy"))
-        // .map(item -> item.name).toArray(String[]::new));
-        // List<String> metas;
-        // List<String> categories;
-        // List<String> tags;
-        return post;
-    }
+	public void setId(Integer id) {
+		this.id = id;
+	}
 
-    public class Guid {
-        public String rendered;
-    }
+	public String getDate() {
+		return date;
+	}
 
-    public class Title {
-        public String rendered;
-    }
+	public void setDate(String date) {
+		this.date = date;
+	}
 
-    public class Content {
-        public String rendered;
-    }
+	public String getLink() {
+		return link;
+	}
 
-    public class Excerpt {
-        public String rendered;
-    }
+	public void setLink(String link) {
+		this.link = link;
+	}
 
-    public class Self {
-        public String href;
-    }
+	public String getTitle() {
+		return this.title.get("rendered");
+	}
 
-    public class Collection {
-        public String href;
-    }
+	public void setTitle(Map<String, String> title) {
+		this.title = title;
+	}
 
-    public class About {
-        public String href;
-    }
+	public String getContent() {
+		String html = content.get("rendered");
+		Document soup = Jsoup.parse(html);
+		String text = soup.text();
+		return text;
+	}
 
-    public class Author {
-        public boolean embeddable;
-        public String href;
-        public int id;
-        public String name;
-        public String url;
-        public String description;
-        public String link;
-        public String slug;
-        public AvatarUrls avatar_urls;
-        public Links _links;
-    }
+	public void setContent(Map<String, String> content) {
+		this.content = content;
+	}
 
-    public class Reply {
-        public boolean embeddable;
-        public String href;
-    }
+	public String getExcerpt() {
+		String text = excerpt.get("rendered");
+		return text;
+	}
 
-    public class VersionHistory {
-        public int count;
-        public String href;
-    }
+	public void setExcerpt(Map<String, String> excerpt) {
+		this.excerpt = excerpt;
+	}
 
-    public class WpFeaturedmedia {
-        public boolean embeddable;
-        public String href;
-        public int id;
-        public Date date;
-        public String slug;
-        public String type;
-        public Object link;
-        public Title title;
-        public int author;
-        public Caption caption;
-        public String alt_text;
-        public String media_type;
-        public String mime_type;
-        public MediaDetails media_details;
-        public String source_url;
-        public Links _links;
-    }
+	public String getAuthor() {
+		JSONArray embedded = new JSONArray((List<Object>) get_embedded().get("author"));
+		JSONObject object = (JSONObject) embedded.get(0);
+		String name = object.getString("name");
+		return name;
+	}
 
-    public class WpAttachment {
-        public String href;
-    }
+	private Map<String, Object> get_embedded() {
+		return _embedded;
+	}
+	
+	
+	public List<String> getTerms() {
+		return null;
+	}
+	public void set_embedded(Map<String, Object> _embedded) {
+		this._embedded = _embedded;
+	}
 
-    public class WpTerm {
-        public String taxonomy;
-        public boolean embeddable;
-        public String href;
-    }
+	public List<String> getTags() {
+		JSONArray terms = new JSONArray((List<Object>) get_embedded().get("wp:term"));
+		List<String> itensFinded = extractFromTerms(terms , "post_tag");		
+		return itensFinded;
+	}
 
-    public class Cury {
-        public String name;
-        public String href;
-        public boolean templated;
-    }
+	public List<String> getCategories() {
+		JSONArray categories = new JSONArray((List<Object>) get_embedded().get("wp:term"));
+		List<String> itensFinded = extractFromTerms(categories, "category");
+		return itensFinded;
+	}
 
-    public class Links {
-        public List<Self> self;
-        public List<Collection> collection;
-        public List<About> about;
-        public List<Author> author;
-        public List<Reply> replies;
-        @JsonProperty("version-history")
-        public List<VersionHistory> versionHistory;
-        @JsonProperty("wp:featuredmedia")
-        public List<WpFeaturedmedia> wpFeaturedmedia;
-        @JsonProperty("wp:attachment")
-        public List<WpAttachment> wpAttachment;
-        @JsonProperty("wp:term")
-        public List<WpTerm> wpTerm;
-        public List<Cury> curies;
-    }
+	private List<String> extractFromTerms(JSONArray categories, String type) {
+		List<String> itens = new ArrayList<String>();
+		for (int i = 0; i < categories.size(); i++) {
+			JSONArray itemArray = (JSONArray) categories.get(i);
+			for (int j = 0; j < itemArray.size(); j++) {
+				JSONObject object = (JSONObject) itemArray.get(j);
+				String taxonomy = object.getString("taxonomy");
+				String name = object.getString("name");
+				if (taxonomy.equals(type)) {
+					itens.add(name);
+				}
+			}
+		}
+		return itens;
+	}
 
-    public class AvatarUrls {
-        @JsonProperty("24")
-        public String _24;
-        @JsonProperty("48")
-        public String _48;
-        @JsonProperty("96")
-        public String _96;
-    }
+	
+	public Post getPost() {
+		Post post = new Post();
+		post.setId(getId());
+		post.setAuthor(getAuthor());
+		post.setCategories(getCategories());
+		post.setTags(getTags());
+		post.setDate(getDate());
+		post.setContent(getContent());
+		post.setLink(getLink());
+		post.setTitle(getTitle());
+		post.setExcerpt(getExcerpt());
+		return post;
+	}
 
-    public class Caption {
-        public String rendered;
-    }
 
-    public class Medium {
-        public String file;
-        public int width;
-        public int height;
-        public String mime_type;
-        public String source_url;
-    }
+//    public Post getPost() {
+//        Post post = new Post();
+//        post.setId(this.id);
+//        post.setDate(String.valueOf(this.date));
+//        post.setTitle(title.rendered);
+//        post.setContent(content.rendered);
+//        post.setExcerpt(excerpt.rendered);
+//        post.setAuthor(_embedded.author.stream().findFirst().get().name);
+//        post.setLink(link);
+//        // item.taxonomy.equals("taxonomy"))
+//        // .map(item -> item.name).toArray(String[]::new));
+//        // List<String> metas;
+//        // List<String> categories;
+//        // List<String> tags;
+//        return post;
+//    }
 
-    public class Large {
-        public String file;
-        public int width;
-        public int height;
-        public String mime_type;
-        public String source_url;
-    }
-
-    public class Thumbnail {
-        public String file;
-        public int width;
-        public int height;
-        public String mime_type;
-        public String source_url;
-    }
-
-    public class MediumLarge {
-        public String file;
-        public int width;
-        public int height;
-        public String mime_type;
-        public String source_url;
-    }
-
-    public class _1536x1536 {
-        public String file;
-        public int width;
-        public int height;
-        public String mime_type;
-        public String source_url;
-    }
-
-    public class _2048x2048 {
-        public String file;
-        public int width;
-        public int height;
-        public String mime_type;
-        public String source_url;
-    }
-
-    public class CardSmall {
-        public String file;
-        public int width;
-        public int height;
-        public String mime_type;
-        public String source_url;
-    }
-
-    public class CardLarge {
-        public String file;
-        public int width;
-        public int height;
-        public String mime_type;
-        public String source_url;
-    }
-
-    public class CardExtraLarge {
-        public String file;
-        public int width;
-        public int height;
-        public String mime_type;
-        public String source_url;
-    }
-
-    public class SmallResponsive {
-        public String file;
-        public int width;
-        public int height;
-        public String mime_type;
-        public String source_url;
-    }
-
-    public class Full {
-        public String file;
-        public int width;
-        public int height;
-        public String mime_type;
-        public String source_url;
-    }
-
-    public class Sizes {
-        public Medium medium;
-        public Large large;
-        public Thumbnail thumbnail;
-        public MediumLarge medium_large;
-        @JsonProperty("1536x1536")
-        public _1536x1536 _1536x1536;
-        @JsonProperty("2048x2048")
-        public _2048x2048 _2048x2048;
-        @JsonProperty("card-small")
-        public CardSmall cardSmall;
-        @JsonProperty("card-large")
-        public CardLarge cardLarge;
-        @JsonProperty("card-extra-large")
-        public CardExtraLarge cardExtraLarge;
-        @JsonProperty("small-responsive")
-        public SmallResponsive smallResponsive;
-        public Full full;
-    }
-
-    public class ImageMeta {
-        public String aperture;
-        public String credit;
-        public String camera;
-        public String caption;
-        public String created_timestamp;
-        public String copyright;
-        public String focal_length;
-        public String iso;
-        public String shutter_speed;
-        public String title;
-        public String orientation;
-        public List<Object> keywords;
-    }
-
-    public class MediaDetails {
-        public int width;
-        public int height;
-        public String file;
-        public Sizes sizes;
-        public ImageMeta image_meta;
-        public String original_image;
-    }
-
-    public class Embedded {
-        public List<Author> author;
-        @JsonProperty("wp:featuredmedia")
-        public List<WpFeaturedmedia> wpFeaturedmedia;
-        @JsonProperty("wp:term")
-        public List<List<String>> wpTerm;
-    }
 }
