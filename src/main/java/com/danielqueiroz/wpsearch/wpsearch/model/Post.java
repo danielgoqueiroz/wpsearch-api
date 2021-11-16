@@ -122,4 +122,13 @@ public class Post {
         return post;
     }
 
+	@Override
+	public String toString() {
+		return "Post [id=" + id + ", date=" + date + ", title=" + title + ", link=" + link + ", type=" + type
+				+ ", content=" + content + ", excerpt=" + excerpt + ", author=" + author + ", metas=" + metas
+				+ ", categories=" + categories + ", tags=" + tags + "]";
+	}
+    
+    
+
 }

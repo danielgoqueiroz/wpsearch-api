@@ -74,11 +74,20 @@ public class PostDTO {
 		this.excerpt = excerpt;
 	}
 
-	public String getAuthor() {
-		JSONArray embedded = new JSONArray((List<Object>) get_embedded().get("author"));
-		JSONObject object = (JSONObject) embedded.get(0);
-		String name = object.getString("name");
-		return name;
+	public String getAuthor() throws Exception {
+		try {
+			List<Object> list = (List<Object>) get_embedded().get("author");
+			if (list == null) {
+				return "";
+			}
+			JSONArray embedded = new JSONArray(list);
+			JSONObject object = (JSONObject) embedded.get(0);
+			String name = object.getString("name");
+			return name;			
+		} catch (Exception e) {
+			throw new Exception(e);
+		}
+		
 	}
 
 	private Map<String, Object> get_embedded() {
@@ -122,7 +131,7 @@ public class PostDTO {
 	}
 
 	
-	public Post getPost() {
+	public Post getPost() throws Exception {
 		Post post = new Post();
 		post.setId(getId());
 		post.setAuthor(getAuthor());

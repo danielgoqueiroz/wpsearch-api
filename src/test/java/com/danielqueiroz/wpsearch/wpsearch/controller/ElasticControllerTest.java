@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSON;
@@ -48,7 +49,7 @@ public class ElasticControllerTest {
 				request.source(jsonString, XContentType.JSON);
                 IndexResponse response = getClient().index(request, RequestOptions.DEFAULT);
                 assertEquals(Result.CREATED, response.getResult());
-            } catch (IOException e) {
+            } catch (Exception e) {
             	System.out.println("Erro ao processar arquivo " + filePath);
                 e.printStackTrace();
             }
@@ -62,33 +63,20 @@ public class ElasticControllerTest {
         searchRequest.indices("publicacao");
         searchRequest.source(SearchSourceBuilder.searchSource().size(10));
         SearchResponse sResponse = getClient().search(searchRequest, RequestOptions.DEFAULT);
-        SearchHit[] searchHits = sResponse.getHits().getHits();
-        List<SearchHit> postsES = Arrays.asList(searchHits);
-        // Post.parserElasticToObject(JSON.parseObject(item.getSourceAsString(),
-        // JSONObject.class))
-
-        postsES.stream().map(hit -> {
-            JSONObject json = new JSONObject(hit.getSourceAsMap());
-
-            System.out.println(json);
-            Post post = new Post();
-            String id = json.getString("id");
-            String title = json.getString("title");
-            String content = json.getString("content").toString();
-            String author = json.getJSONArray("_embedded").getJSONObject(0).getJSONObject("author").getString("name");
-
-            String date = json.getString("date");
-
-            post.setId(Integer.parseInt(id));
-            post.setTitle(title);
-            post.setContent(content);
-            post.setAuthor(author);
-            post.setDate(date);
+        List<Post> searchHits = Arrays.asList(sResponse.getHits().getHits())
+        		.stream().map(item -> 
+        			JSON.toJavaObject(JSON.parseObject(item.getSourceAsString()), Post.class)).collect(Collectors.toList()
+        					);
+        System.out.println(searchHits.size());
+        System.out.println(searchHits);
+        searchHits.stream().map(post-> {
+            post.getId();
+            post.getTitle();
+            post.getContent();
+            post.getAuthor();
+            post.getDate();
             return post;
         }).collect(Collectors.toList());
-        System.out.println(postsES);
-
-        // assertTrue(resultsList.size() > 0);
     }
 
     @Test

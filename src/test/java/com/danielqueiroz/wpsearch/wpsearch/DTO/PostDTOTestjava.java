@@ -21,7 +21,7 @@ import com.danielqueiroz.wpsearch.wpsearch.model.Post;
 public class PostDTOTestjava {
 
 	@Test
-	public void deveConverterJsonEmObejtoPost() throws IOException {
+	public void deveConverterJsonEmObejtoPost() throws Exception {
 		File json = new File("src/test/resources/jsonExemplo.json");
 		assertTrue(json.exists());
 		String jsonString = FileUtils.readFileToString(json);
