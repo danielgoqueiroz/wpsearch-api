@@ -8,6 +8,6 @@ public class StatusService {
 
     @GetMapping("/")
     public String teste() {
-        return "Oltasasdasddsa á";
+        return "On";
     }
 }

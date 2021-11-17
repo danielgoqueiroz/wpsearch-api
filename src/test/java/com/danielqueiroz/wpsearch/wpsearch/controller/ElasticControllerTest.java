@@ -1,5 +1,6 @@
 package com.danielqueiroz.wpsearch.wpsearch.controller;
 
+import static com.danielqueiroz.wpsearch.wpsearch.service.ElasticClientService.*;
 import static com.danielqueiroz.wpsearch.wpsearch.service.ElasticClientService.getClient;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -17,6 +18,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.danielqueiroz.wpsearch.wpsearch.dto.PostDTO;
 import com.danielqueiroz.wpsearch.wpsearch.model.Person;
 import com.danielqueiroz.wpsearch.wpsearch.model.Post;
+import com.danielqueiroz.wpsearch.wpsearch.service.ElasticClientService;
 
 import org.apache.commons.io.FileUtils;
 import org.elasticsearch.action.DocWriteResponse.Result;
@@ -25,30 +27,35 @@ import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.common.xcontent.XContent;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
-import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
+@ExtendWith(SpringExtension.class)
+@SpringBootTest
 public class ElasticControllerTest {
 
+	@Autowired
+	private ElasticClientService service;
+	
     @Test
     public void salvarPublicações() throws IOException {
-        File baseFolder = new File("D:/Desenvolvimento/MachineLearning/Dados Ndmais/2021");
+        File baseFolder = new File("D:/Desenvolvimento/MachineLearning/Dados Ndmais/2012");
         Files.walk(baseFolder.toPath()).filter(Files::isRegularFile).forEach(filePath -> {
+        	System.out.println(filePath);
             try {
-            	
-                JSON json = (JSON) JSON.parse(FileUtils.readFileToString(filePath.toFile()));
-				PostDTO postDTO = JSON.toJavaObject(json, PostDTO.class);
-                IndexRequest request = new IndexRequest("publicacao");
-                Post post = postDTO.getPost();
-				String jsonString = JSON.toJSONString(post);
-				request.source(jsonString, XContentType.JSON);
-                IndexResponse response = getClient().index(request, RequestOptions.DEFAULT);
-                assertEquals(Result.CREATED, response.getResult());
+        		JSON json = (JSON) JSON.parse(FileUtils.readFileToString(filePath.toFile()));
+				Result result = service.publishRequest(json);
+                assertEquals(Result.CREATED, result);
             } catch (Exception e) {
             	System.out.println("Erro ao processar arquivo " + filePath);
                 e.printStackTrace();
@@ -58,15 +65,10 @@ public class ElasticControllerTest {
 
     @Test
     public void buscarPublicacoes() throws IOException {
-
-        SearchRequest searchRequest = new SearchRequest();
-        searchRequest.indices("publicacao");
-        searchRequest.source(SearchSourceBuilder.searchSource().size(10));
-        SearchResponse sResponse = getClient().search(searchRequest, RequestOptions.DEFAULT);
-        List<Post> searchHits = Arrays.asList(sResponse.getHits().getHits())
-        		.stream().map(item -> 
-        			JSON.toJavaObject(JSON.parseObject(item.getSourceAsString()), Post.class)).collect(Collectors.toList()
-        					);
+    	
+    	List<Post> searchHits = service.getPublishies("Covid-19 Joinville");
+        assertTrue(searchHits.size() > 0);
+        
         System.out.println(searchHits.size());
         System.out.println(searchHits);
         searchHits.stream().map(post-> {
@@ -80,6 +82,7 @@ public class ElasticControllerTest {
     }
 
     @Test
+    @Disabled
     public void givenJsonString_whenJavaObject_thenIndexDocument() throws IOException {
 
         // Create Json object

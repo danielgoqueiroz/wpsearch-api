@@ -1,8 +1,13 @@
 package com.danielqueiroz.wpsearch.wpsearch.controller;
 
 import com.danielqueiroz.wpsearch.wpsearch.dto.PostDTO;
+import com.danielqueiroz.wpsearch.wpsearch.model.Post;
 import com.danielqueiroz.wpsearch.wpsearch.service.ElasticClientService;
 
+import java.io.IOException;
+import java.util.List;
+
+import org.elasticsearch.action.DocWriteResponse.Result;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.RequestOptions;
@@ -10,25 +15,44 @@ import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.elasticsearch.client.ClientConfiguration;
 import org.springframework.data.elasticsearch.client.RestClients;
+import org.springframework.data.repository.query.Param;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 public class ElasticController {
 
-    // @GetMapping("/save")
-    // public RestHighLevelClient save(PostDTO postDTO) {
+	@Autowired
+	private ElasticClientService service;
+	
+	@GetMapping("/save")
+	public ResponseEntity<?> get(@Param("query") String query) {
 
-    // // Recebom post completo
-    // // Faz parser para post como objeto
-    // // salva post
+		try {
+			List<Post> publishies = service.getPublishies(query);
+			return ResponseEntity.accepted().body(publishies);
+		} catch (IOException e) {
+			return ResponseEntity.badRequest().body(e.getMessage());
+			
+		}
 
-    // IndexRequest request = new IndexRequest("publicacao");
-    // IndexResponse response = ElasticClientService.getClient().index(request,
-    // RequestOptions.DEFAULT);
-    // RestHighLevelClient client = ElasticClientService.getClient();
-    // ElasticClientService.getClient().close();
-    // return client;
-    // }
+	}
+	
+	@PostMapping("/save")
+	public String save(PostDTO postDTO) {
+
+		try {
+			IndexRequest request = new IndexRequest("publicacao");
+			IndexResponse response;
+			response = ElasticClientService.getClient().index(request, RequestOptions.DEFAULT);
+			ElasticClientService.getClient().close();
+			return response.getResult().toString();
+		} catch (IOException e) {
+			return e.getMessage();
+		}
+
+	}
 
 }
