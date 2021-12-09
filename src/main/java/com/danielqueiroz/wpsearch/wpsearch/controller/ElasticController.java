@@ -7,6 +7,8 @@ import com.danielqueiroz.wpsearch.wpsearch.service.ElasticClientService;
 import java.io.IOException;
 import java.util.List;
 
+import javax.ws.rs.QueryParam;
+
 import org.elasticsearch.action.DocWriteResponse.Result;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
@@ -19,6 +21,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -28,8 +31,7 @@ public class ElasticController {
 	private ElasticClientService service;
 	
 	@GetMapping("/save")
-	public ResponseEntity<?> get(@Param("query") String query) {
-
+	public ResponseEntity<?> get(@RequestParam("q") String query) {
 		try {
 			List<Post> publishies = service.getPublishies(query);
 			return ResponseEntity.accepted().body(publishies);

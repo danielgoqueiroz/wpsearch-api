@@ -48,7 +48,7 @@ public class ElasticControllerTest {
 	private ElasticClientService service;
 	
     @Test
-    public void salvarPublicações() throws IOException {
+    public void salvarPublicações() throws IOException { 
         File baseFolder = new File("D:/Desenvolvimento/MachineLearning/Dados Ndmais/2012");
         Files.walk(baseFolder.toPath()).filter(Files::isRegularFile).forEach(filePath -> {
         	System.out.println(filePath);
@@ -68,9 +68,10 @@ public class ElasticControllerTest {
     	
     	List<Post> searchHits = service.getPublishies("Covid-19 Joinville");
         assertTrue(searchHits.size() > 0);
+        searchHits.forEach(item-> {
+        	System.out.println(item);
+        });
         
-        System.out.println(searchHits.size());
-        System.out.println(searchHits);
         searchHits.stream().map(post-> {
             post.getId();
             post.getTitle();
